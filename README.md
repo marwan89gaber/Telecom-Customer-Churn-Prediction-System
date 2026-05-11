@@ -18,7 +18,7 @@ Python · PySpark · Apache Kafka · PostgreSQL · Flask · Docker · Power BI �
 Prerequisites: Python 3.10+, Docker Desktop
 
 ```bash
-git clone https://github.com/yourname/telecom-churn-platform
+git clone https://github.com/marwan89gaber/Telecom-Customer-Churn-Prediction-System
 cd telecom-churn-platform
 
 # Environment
