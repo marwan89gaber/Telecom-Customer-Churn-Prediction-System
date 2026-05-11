@@ -15,6 +15,9 @@ A practical, engineering-first project demonstrating a reproducible churn predic
 
 This repository implements an end-to-end churn prediction system using the IBM Telco Churn dataset (≈7k rows, 21 features). The emphasis is on engineering: reproducible ETL, batch and streaming scoring, containerized services, and clear deployment artifacts — not just notebooks.
 
+## Architecture
+<img width="2125" height="2250" alt="phase1_folder_structure" src="https://github.com/user-attachments/assets/aa5c820d-b513-4865-951b-bef48c5d9ce2" />
+
 ## Quick start
 
 Prerequisites: Python 3.8+, Docker (optional), Java + Spark (for Spark jobs)
