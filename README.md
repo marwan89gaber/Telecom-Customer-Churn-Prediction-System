@@ -2,8 +2,8 @@
 
 End-to-end ML system for predicting telecom customer churn — covering
 data engineering, batch + real-time scoring, REST API deployment,
-and a business intelligence dashboard. Built to simulate a Vodafone
-production environment.
+and a business intelligence dashboard. Built to simulate a production
+environment.
 
 ---
 
@@ -56,6 +56,9 @@ python -m src.pipeline.spark_batch
 
 # Run tests
 pytest
+
+# Run the EDA notebook
+jupyter notebook notebooks/01_eda.ipynb
 ```
 
 ---
@@ -66,7 +69,7 @@ pytest
 |-------|-------|--------|
 | 1 | Foundation & setup | ✅ Done |
 | 2 | Data engineering pipeline | ✅ Done |
-| 3 | EDA & feature engineering | ⏳ Planned |
+| 3 | EDA & feature engineering | ✅ Done |
 | 4 | ML modelling & evaluation | ⏳ Planned |
 | 5 | Batch prediction pipeline | ⏳ Planned |
 | 6 | Real-time streaming (Kafka) | ⏳ Planned |

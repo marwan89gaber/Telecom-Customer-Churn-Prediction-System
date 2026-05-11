@@ -23,7 +23,7 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     initial_nulls = df["totalcharges"].isna().sum()
     df["totalcharges"] = pd.to_numeric(df["totalcharges"], errors="coerce")
     coerced = df["totalcharges"].isna().sum() - initial_nulls
-    df["totalcharges"].fillna(0.0, inplace=True)
+    df["totalcharges"] = df["totalcharges"].fillna(0.0)
     logger.info(f"TotalCharges: coerced {coerced} blank strings → 0.0")
 
     # 3. Strip whitespace from all string columns
