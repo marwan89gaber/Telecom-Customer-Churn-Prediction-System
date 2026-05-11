@@ -15,22 +15,47 @@ Python · PySpark · Apache Kafka · PostgreSQL · Flask · Docker · Power BI �
 
 ## Quick start
 
-Prerequisites: Python 3.10+, Docker Desktop
+**Prerequisites:** Python 3.10+, Docker Desktop, Java 11+ (for Spark jobs)
 
 ```bash
-git clone https://github.com/yourname/telecom-churn-platform
+git clone https://github.com/marwan89gaber/Telecom-Customer-Churn-Prediction-System
 cd telecom-churn-platform
 
-# Environment
+# Environment variables
 cp .env.example .env
+
+# Python virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Mac/Linux
+pip install -r requirements.txt
 
 # Start PostgreSQL
 docker-compose up -d
 
-# Python dependencies
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+# Download dataset from Kaggle and place at:
+# data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv
+```
+
+---
+
+## Running the pipeline
+
+All scripts must be run as modules from the project root with the venv active.
+
+```bash
+# Run the full ETL pipeline (extract → transform → load → PostgreSQL)
+python -m src.pipeline.etl
+
+# Verify data landed in the database
+docker exec -it churn_postgres psql -U churn_admin -d churn_db \
+  -c "SELECT churn, COUNT(*) FROM customers GROUP BY churn;"
+
+# Run the PySpark batch job (requires Java 11+ and JAVA_HOME set)
+python -m src.pipeline.spark_batch
+
+# Run tests
+pytest
 ```
 
 ---
@@ -40,7 +65,7 @@ pip install -r requirements.txt
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 1 | Foundation & setup | ✅ Done |
-| 2 | Data engineering pipeline | 🔄 In progress |
+| 2 | Data engineering pipeline | ✅ Done |
 | 3 | EDA & feature engineering | ⏳ Planned |
 | 4 | ML modelling & evaluation | ⏳ Planned |
 | 5 | Batch prediction pipeline | ⏳ Planned |
@@ -58,20 +83,21 @@ telecom-churn-platform/
 │   ├── processed/        # cleaned outputs (not committed)
 │   └── external/         # IBM Telco Churn dataset
 ├── src/
-│   ├── pipeline/         # ETL scripts
-│   ├── features/         # feature engineering
-│   ├── models/           # training and evaluation
-│   ├── streaming/        # Kafka producer/consumer
-│   └── utils/            # shared helpers
-├── api/                  # Flask REST API
-├── models/               # saved model artifacts
-├── notebooks/            # EDA and experimentation
-├── dashboard/            # Power BI files
-├── docker/               # Dockerfiles and init scripts
+│   ├── pipeline/         # ETL: extract, transform, load, spark batch
+│   ├── features/         # feature engineering (phase 3)
+│   ├── models/           # training and evaluation (phase 4)
+│   ├── streaming/        # Kafka producer/consumer (phase 6)
+│   └── utils/            # config, logger
+├── api/                  # Flask REST API (phase 7)
+├── models/               # saved model artifacts (phase 4)
+├── notebooks/            # EDA and experimentation (phase 3)
+├── dashboard/            # Power BI files (phase 7)
+├── docker/               # Dockerfiles, init scripts, JDBC jar
 ├── docs/                 # architecture diagrams and screenshots
 ├── tests/                # unit and integration tests
 ├── docker-compose.yml
 ├── requirements.txt
+├── pytest.ini
 └── .env.example
 
 ---

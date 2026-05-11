@@ -1,7 +1,9 @@
+import os
 from loguru import logger
 import sys
 
 def get_logger(name: str = "churn_etl"):
+    os.makedirs("logs", exist_ok=True)
     logger.remove()
     logger.add(
         sys.stdout,
