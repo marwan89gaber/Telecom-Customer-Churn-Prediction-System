@@ -37,3 +37,15 @@ Thumbs.db
 *.env
 secrets/
 logs/
+
+# Spark 
+spark-warehouse/
+metastore_db/
+derby.log
+
+# JDBC driver JARs 
+docker/jars/
+
+# Dashboard exports and screenshots 
+docs/screenshots/
+dashboard/*.pbix

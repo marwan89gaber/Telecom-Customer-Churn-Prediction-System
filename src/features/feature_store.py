@@ -11,6 +11,7 @@ NUMERIC_FEATURES = [
     "num_services",
     "has_support_services",
     "charge_per_tenure",
+    "monthly_spend_delta",
     "is_high_value",
     "is_new_customer",
     "contract_risk_score",

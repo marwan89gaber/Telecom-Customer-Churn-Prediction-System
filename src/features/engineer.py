@@ -19,10 +19,10 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # New customers (0-12m) are highest risk — they haven't committed yet.
     # Customers past 48m are loyalists — very unlikely to leave.
     df["tenure_bucket"] = pd.cut(
-        df["tenure"],
-        bins=[-1, 12, 24, 48, df["tenure"].max()],
-        labels=["new", "developing", "established", "loyal"],
-    )
+    df["tenure"],
+    bins=[-1, 12, 24, 48, float("inf")],
+    labels=["new", "developing", "established", "loyal"],
+)
     logger.info("Feature: tenure_bucket created")
 
     # 2. Number of services subscribed
@@ -59,13 +59,15 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["charge_per_tenure"] = df["monthlycharges"] / (df["tenure"] + 1)
     logger.info("Feature: charge_per_tenure created")
 
-    # 5. Is high value customer
-    # Business reason: top quartile by monthly charges — these are the
-    # customers retention teams should prioritise. Losing one high-value
-    # churner costs more than losing three average ones.
-    threshold = df["monthlycharges"].quantile(0.75)
-    df["is_high_value"] = (df["monthlycharges"] >= threshold).astype(int)
-    logger.info(f"Feature: is_high_value created (threshold: £{threshold:.2f}/month)")
+    # 5. Monthly spend delta
+    # Business reason: compares the current monthly bill against the
+    # customer's historical average spend. A sudden increase may signal
+    # pricing dissatisfaction and increased churn risk.
+    df["monthly_spend_delta"] = (
+        df["monthlycharges"]
+        - (df["totalcharges"] / (df["tenure"] + 1))
+    )
+    logger.info("Feature: monthly_spend_delta created")
 
     # 6. Is new customer
     # Business reason: tenure <= 6 months — the critical onboarding window.
@@ -84,6 +86,11 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["contract_risk_score"] = df["contract"].map(contract_risk).fillna(1)
     logger.info("Feature: contract_risk_score created")
 
+    # 8. Binary churn target for ML
+    # Converts Yes/No churn labels into 1/0 for model training
+    df["churn_binary"] = (df["churn"] == "Yes").astype(int)
+    logger.info("Feature: churn_binary created")
+
     logger.info(f"Feature engineering complete — {len(df.columns)} total columns")
     return df
 
@@ -94,12 +101,11 @@ def get_feature_columns() -> list:
         # Original numeric
         "tenure", "monthlycharges", "totalcharges", "seniorcitizen",
         # Engineered numeric
-        "num_services", "has_support_services", "charge_per_tenure",
+        "num_services", "has_support_services", "charge_per_tenure", "monthly_spend_delta",
         "is_high_value", "is_new_customer", "contract_risk_score",
         # Categoricals (will be encoded in Phase 4)
-        "gender", "partner", "dependents", "phoneservice",
-        "multiplelines", "internetservice", "onlinesecurity",
-        "onlinebackup", "deviceprotection", "techsupport",
-        "streamingtv", "streamingmovies", "contract",
+        "gender", "partner", "dependents", "phoneservice", "multiplelines", 
+        "internetservice", "onlinesecurity", "onlinebackup", "deviceprotection", 
+        "techsupport", "streamingtv", "streamingmovies",
         "paperlessbilling", "paymentmethod", "tenure_bucket",
     ]
