@@ -78,30 +78,32 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-## Repository layout
+## Repository Layout
 
+```text
 telecom-churn-platform/
+├── api/                  # Flask REST API
+├── dashboard/            # Power BI dashboards
 ├── data/
-│   ├── raw/              # original CSVs (not committed)
-│   ├── processed/        # cleaned outputs (not committed)
-│   └── external/         # IBM Telco Churn dataset
-├── src/
-│   ├── pipeline/         # ETL: extract, transform, load, spark batch
-│   ├── features/         # feature engineering (phase 3)
-│   ├── models/           # training and evaluation (phase 4)
-│   ├── streaming/        # Kafka producer/consumer (phase 6)
-│   └── utils/            # config, logger
-├── api/                  # Flask REST API (phase 7)
-├── models/               # saved model artifacts (phase 4)
-├── notebooks/            # EDA and experimentation (phase 3)
-├── dashboard/            # Power BI files (phase 7)
-├── docker/               # Dockerfiles, init scripts, JDBC jar
+│   ├── external/         # IBM Telco Churn dataset
+│   ├── processed/        # cleaned datasets
+│   └── raw/              # original CSVs
+├── docker/               # Dockerfiles and init scripts
 ├── docs/                 # architecture diagrams and screenshots
+├── models/               # trained model artifacts
+├── notebooks/            # EDA and experiments
+├── src/
+│   ├── features/         # feature engineering
+│   ├── models/           # model training/evaluation
+│   ├── pipeline/         # ETL and Spark batch jobs
+│   ├── streaming/        # Kafka producers/consumers
+│   └── utils/            # helpers and configuration
 ├── tests/                # unit and integration tests
 ├── docker-compose.yml
-├── requirements.txt
 ├── pytest.ini
+├── requirements.txt
 └── .env.example
+```
 
 ---
 
