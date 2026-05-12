@@ -20,6 +20,9 @@ from src.models.preprocessor import build_preprocessor
 from src.utils.config import Config
 from src.utils.logger import get_logger
 
+from src.pipeline.drift_detector import save_training_distribution
+from src.features.feature_store import NUMERIC_FEATURES
+
 logger = get_logger("train")
 MODELS_DIR = Path("models")
 MODELS_DIR.mkdir(exist_ok=True)
@@ -31,9 +34,17 @@ SCORING = ["roc_auc", "f1", "precision", "recall"]
 def load_data() -> tuple[pd.DataFrame, pd.Series]:
     logger.info(f"Loading data from {Config.PROCESSED_DATA_PATH}")
     df = pd.read_csv(Config.PROCESSED_DATA_PATH)
+    if len(df) < 100:
+        raise ValueError(
+            f"Dataset too small: only {len(df)} rows loaded."
+        )
     df = engineer_features(df)
     X = df[ALL_FEATURES]
     y = df[TARGET]
+    if y.nunique() < 2:
+        raise ValueError(
+            "Target contains only one class."
+        )
     logger.info(f"Dataset: {X.shape[0]:,} rows | Churn rate: {y.mean():.1%}")
     return X, y
 
@@ -143,7 +154,9 @@ def run_training() -> None:
 
     neg = int((y_train == 0).sum())
     pos = int((y_train == 1).sum())
-    scale_pos_weight = round(neg / pos, 2)
+
+    # ZeroDivisionError: division by zero can occur if the training set is perfectly balanced
+    scale_pos_weight = round(neg / pos, 2) if pos > 0 else 1.0
     logger.info(f"Class ratio neg/pos: {scale_pos_weight}")
 
     best_name = compare_models(X_train, y_train, scale_pos_weight)
@@ -153,6 +166,7 @@ def run_training() -> None:
     metrics = evaluate_model(best_pipeline, X_test, y_test)
     save_evaluation_plots(best_pipeline, X_test, y_test)
 
+    save_training_distribution(X, NUMERIC_FEATURES)
     model_path = MODELS_DIR / "churn_model.pkl"
     joblib.dump(best_pipeline, model_path)
     logger.info(f"Model saved → {model_path}")

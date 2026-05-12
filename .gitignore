@@ -49,3 +49,9 @@ docker/jars/
 # Dashboard exports and screenshots 
 docs/screenshots/
 dashboard/*.pbix
+
+# Airflow
+airflow/logs/
+airflow/plugins/
+airflow.cfg
+airflow.db

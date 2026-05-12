@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    POSTGRES_USER     = os.getenv("POSTGRES_USER", "churn_admin")
-    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "changeme")
+    POSTGRES_USER     = os.getenv("POSTGRES_USER", "airflow")
+    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "airflow")
     POSTGRES_HOST     = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_PORT     = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB       = os.getenv("POSTGRES_DB", "churn_db")
+    POSTGRES_DB       = os.getenv("POSTGRES_DB", "airflow")
 
     RAW_DATA_PATH = "data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv"
     PROCESSED_DATA_PATH = "data/processed/customers_clean.csv"
