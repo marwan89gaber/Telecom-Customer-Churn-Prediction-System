@@ -44,21 +44,21 @@ docker-compose up -d
 All scripts must be run as modules from the project root with the venv active.
 
 ```bash
-# Run the full ETL pipeline (extract → transform → load → PostgreSQL)
+# 1. Run the full ETL pipeline (extract → clean → transform → load into PostgreSQL)
 python -m src.pipeline.etl
 
-# Verify data landed in the database
+# 2. Verify data landed in the database
 docker exec -it churn_postgres psql -U churn_admin -d churn_db \
   -c "SELECT churn, COUNT(*) FROM customers GROUP BY churn;"
 
-# Run the PySpark batch job (requires Java 11+ and JAVA_HOME set)
+# 3. Run the PySpark batch job (requires Java 11+ and JAVA_HOME set)
 python -m src.pipeline.spark_batch
 
-# Run tests
-pytest
-
-# Run the EDA notebook
+# 4. Run the EDA and feature engineering notebook
 jupyter notebook notebooks/01_eda.ipynb
+
+# 5. Run all tests
+pytest
 ```
 
 ---
@@ -78,27 +78,43 @@ jupyter notebook notebooks/01_eda.ipynb
 
 ---
 
-## Repository Layout
+## Repository layout
 
 ```text
 telecom-churn-platform/
-├── api/                  # Flask REST API
-├── dashboard/            # Power BI dashboards
+├── api/                  # Flask REST API (Phase 7)
+├── dashboard/            # Power BI dashboards (Phase 7)
 ├── data/
-│   ├── external/         # IBM Telco Churn dataset
-│   ├── processed/        # cleaned datasets
-│   └── raw/              # original CSVs
-├── docker/               # Dockerfiles and init scripts
-├── docs/                 # architecture diagrams and screenshots
-├── models/               # trained model artifacts
-├── notebooks/            # EDA and experiments
+│   ├── external/         # IBM Telco Churn dataset (not committed — see Dataset section)
+│   ├── processed/        # cleaned datasets (not committed)
+│   └── raw/              # original CSVs (not committed)
+├── docker/
+│   ├── jars/             # PostgreSQL JDBC driver (not committed — see Spark section)
+│   └── init.sql          # DB schema bootstrap
+├── docs/
+│   ├── architecture/     # system architecture diagrams (Phase 7)
+│   └── screenshots/      # dashboard and API screenshots (Phase 7)
+├── models/               # trained model artifacts (Phase 4)
+├── notebooks/
+│   └── 01_eda.ipynb      # exploratory data analysis and feature engineering
 ├── src/
-│   ├── features/         # feature engineering
-│   ├── models/           # model training/evaluation
-│   ├── pipeline/         # ETL and Spark batch jobs
-│   ├── streaming/        # Kafka producers/consumers
-│   └── utils/            # helpers and configuration
-├── tests/                # unit and integration tests
+│   ├── features/
+│   │   ├── engineer.py   # 8 business-driven engineered features
+│   │   └── feature_store.py  # single source of truth for feature columns
+│   ├── models/           # model training and evaluation (Phase 4)
+│   ├── pipeline/
+│   │   ├── etl.py        # pipeline orchestrator
+│   │   ├── extract.py    # CSV ingestion
+│   │   ├── transform.py  # cleaning and standardisation
+│   │   ├── load.py       # PostgreSQL loader
+│   │   └── spark_batch.py  # PySpark ETL job
+│   ├── streaming/        # Kafka producers and consumers (Phase 6)
+│   └── utils/
+│       ├── config.py     # environment and path configuration
+│       └── logger.py     # structured logging with loguru
+├── tests/
+│   ├── test_pipeline.py  # ETL transform unit tests
+│   └── test_features.py  # feature engineering unit tests
 ├── docker-compose.yml
 ├── pytest.ini
 ├── requirements.txt
@@ -109,16 +125,56 @@ telecom-churn-platform/
 
 ## Dataset
 
-IBM Telco Customer Churn — ~7,000 rows, 21 features, binary churn target.
+IBM Telco Customer Churn — ~7,000 rows, 21 features, binary churn target.  
 Source: [Kaggle](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
 
-Place the CSV at: `data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv`
+Place the downloaded CSV at:
+
+```
+data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv
+```
+
+Raw and processed data files are excluded from version control via `.gitignore`.
+
+---
+
+## Engineered features
+
+Eight business-driven features are added on top of the raw dataset in `src/features/engineer.py`.
+All features are justified by domain knowledge about telecom churn behaviour.
+
+| Feature | Type | Business rationale |
+|---|---|---|
+| `tenure_bucket` | Categorical | Churn risk is non-linear with tenure; new customers (≤12m) are highest risk |
+| `num_services` | Numeric | More services = higher switching cost = lower churn probability |
+| `has_support_services` | Binary flag | Customers with tech support or online security have lower churn rates |
+| `charge_per_tenure` | Numeric | Monthly charge normalised by tenure — isolates price sensitivity |
+| `monthly_spend_delta` | Numeric | Current bill vs. historical average; sudden increases signal dissatisfaction |
+| `is_new_customer` | Binary flag | Tenure ≤ 6 months — highest ROI window for retention intervention |
+| `contract_risk_score` | Ordinal | Month-to-month = 2, one year = 1, two year = 0 |
+| `churn_binary` | Target | Yes → 1, No → 0; used as the ML training target |
+
+The `src/features/feature_store.py` module is the single source of truth for which
+columns enter the model. Phase 4 imports exclusively from there.
+
+---
+
+## Spark setup
+
+The PySpark batch job connects to PostgreSQL via JDBC.  
+Download the driver JAR and place it at `docker/jars/postgresql-42.7.3.jar`:
+
+```
+https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
+```
+
+Ensure `JAVA_HOME` points to a Java 11+ installation before running the Spark job.
 
 ---
 
 ## Architecture
 
-> Architecture diagram will be added in Phase 7.
+> Full architecture diagram will be added in Phase 7.
 
 ---
 
