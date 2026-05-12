@@ -59,13 +59,22 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["charge_per_tenure"] = df["monthlycharges"] / (df["tenure"] + 1)
     logger.info("Feature: charge_per_tenure created")
 
-    # 5. Is new customer
+    # 5. Monthly spend delta
+    # Business reason: compares current monthly charges against
+    # historical average customer spend.
+    df["monthly_spend_delta"] = (
+        df["monthlycharges"]
+        - (df["totalcharges"] / (df["tenure"] + 1))
+    )
+    logger.info("Feature: monthly_spend_delta created")
+
+    # 6. Is new customer
     # Business reason: tenure <= 6 months — the critical onboarding window.
     # Retention interventions in this window have the highest ROI.
     df["is_new_customer"] = (df["tenure"] <= 6).astype(int)
     logger.info("Feature: is_new_customer created")
 
-    # 6. Contract risk score
+    # 7. Contract risk score
     # Business reason: encodes contract type as an ordinal risk signal.
     # Month-to-month = 2 (highest risk), one year = 1, two year = 0 (lowest).
     contract_risk = {
@@ -76,10 +85,11 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["contract_risk_score"] = df["contract"].map(contract_risk).fillna(1)
     logger.info("Feature: contract_risk_score created")
 
-    # 7. Binary churn target for ML
-    # Converts Yes/No churn labels into 1/0 for model training
-    df["churn_binary"] = (df["churn"] == "Yes").astype(int)
-    logger.info("Feature: churn_binary created")
+    # 8. Binary churn target
+    # only created when churn label is available (training only)
+    if "churn" in df.columns:
+        df["churn_binary"] = (df["churn"] == "Yes").astype(int)
+        logger.info("Feature: churn_binary created")
 
     logger.info(f"Feature engineering complete — {len(df.columns)} total columns")
     return df

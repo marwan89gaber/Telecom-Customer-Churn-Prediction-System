@@ -57,7 +57,13 @@ python -m src.pipeline.spark_batch
 # 4. Run the EDA and feature engineering notebook
 jupyter notebook notebooks/01_eda.ipynb
 
-# 5. Run all tests
+# 5. Train the model — expect 3–8 minutes with GridSearchCV
+python -m src.models.train
+
+# 6. Generate SHAP explainability plots (requires trained model)
+python -m src.models.shap_analysis
+
+# 7. Run all tests
 pytest
 ```
 
@@ -70,7 +76,7 @@ pytest
 | 1 | Foundation & setup | ✅ Done |
 | 2 | Data engineering pipeline | ✅ Done |
 | 3 | EDA & feature engineering | ✅ Done |
-| 4 | ML modelling & evaluation | ⏳ Planned |
+| 4 | ML modelling & evaluation | ✅ Done |
 | 5 | Batch prediction pipeline | ⏳ Planned |
 | 6 | Real-time streaming (Kafka) | ⏳ Planned |
 | 7 | API, dashboard & deployment | ⏳ Planned |
@@ -180,4 +186,11 @@ Ensure `JAVA_HOME` points to a Java 11+ installation before running the Spark jo
 
 ## Results
 
-> Model metrics and business impact will be documented after Phase 4.
+Model metrics are written to `models/model_metadata.json` after training.
+Full results and business impact will be documented in Phase 8.
+
+| Metric | Value |
+|--------|-------|
+| ROC-AUC | 0.8469 |
+| F1 (churn class) | 0.6227 |
+| Recall (churn class) | 0.7834 |

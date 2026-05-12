@@ -1,0 +1,43 @@
+{
+  "model_name": "Logistic Regression",
+  "trained_at": "2026-05-12T03:24:22.168888",
+  "test_metrics": {
+    "roc_auc": 0.8469,
+    "avg_precision": 0.6626,
+    "precision_churn": 0.5168,
+    "recall_churn": 0.7834,
+    "f1_churn": 0.6227,
+    "accuracy": 0.748
+  },
+  "features": [
+    "tenure",
+    "monthlycharges",
+    "totalcharges",
+    "seniorcitizen",
+    "num_services",
+    "has_support_services",
+    "charge_per_tenure",
+    "monthly_spend_delta",
+    "is_new_customer",
+    "contract_risk_score",
+    "gender",
+    "partner",
+    "dependents",
+    "phoneservice",
+    "multiplelines",
+    "internetservice",
+    "onlinesecurity",
+    "onlinebackup",
+    "deviceprotection",
+    "techsupport",
+    "streamingtv",
+    "streamingmovies",
+    "paperlessbilling",
+    "paymentmethod",
+    "tenure_bucket"
+  ],
+  "target": "churn_binary",
+  "train_rows": 5634,
+  "test_rows": 1409,
+  "churn_rate": 0.2653698707936959
+}

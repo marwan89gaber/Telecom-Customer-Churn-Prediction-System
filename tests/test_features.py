@@ -53,7 +53,7 @@ def test_no_nulls_in_engineered_columns(clean_df):
     result = engineer_features(clean_df)
     new_cols = [
         "tenure_bucket", "num_services", "has_support_services",
-        "charge_per_tenure", "is_high_value", "is_new_customer",
+        "charge_per_tenure", "monthly_spend_delta", "is_new_customer",
         "contract_risk_score",
     ]
     assert result[new_cols].isnull().sum().sum() == 0
