@@ -6,7 +6,7 @@ logger = get_logger("feature_engineer")
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Adds 7 business-driven features on top of the cleaned customer DataFrame.
+    Adds engineered business-driven features on top of the cleaned customer DataFrame.
     All features are derived from domain knowledge about telecom churn.
     Input: clean DataFrame from transform.py
     Output: enriched DataFrame ready for modelling
@@ -19,10 +19,10 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # New customers (0-12m) are highest risk — they haven't committed yet.
     # Customers past 48m are loyalists — very unlikely to leave.
     df["tenure_bucket"] = pd.cut(
-    df["tenure"],
-    bins=[-1, 12, 24, 48, float("inf")],
-    labels=["new", "developing", "established", "loyal"],
-)
+        df["tenure"],
+        bins=[-1, 12, 24, 48, float("inf")],
+        labels=["new", "developing", "established", "loyal"],
+    )
     logger.info("Feature: tenure_bucket created")
 
     # 2. Number of services subscribed
@@ -59,23 +59,13 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["charge_per_tenure"] = df["monthlycharges"] / (df["tenure"] + 1)
     logger.info("Feature: charge_per_tenure created")
 
-    # 5. Monthly spend delta
-    # Business reason: compares the current monthly bill against the
-    # customer's historical average spend. A sudden increase may signal
-    # pricing dissatisfaction and increased churn risk.
-    df["monthly_spend_delta"] = (
-        df["monthlycharges"]
-        - (df["totalcharges"] / (df["tenure"] + 1))
-    )
-    logger.info("Feature: monthly_spend_delta created")
-
-    # 6. Is new customer
+    # 5. Is new customer
     # Business reason: tenure <= 6 months — the critical onboarding window.
     # Retention interventions in this window have the highest ROI.
     df["is_new_customer"] = (df["tenure"] <= 6).astype(int)
     logger.info("Feature: is_new_customer created")
 
-    # 7. Contract risk score
+    # 6. Contract risk score
     # Business reason: encodes contract type as an ordinal risk signal.
     # Month-to-month = 2 (highest risk), one year = 1, two year = 0 (lowest).
     contract_risk = {
@@ -86,7 +76,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["contract_risk_score"] = df["contract"].map(contract_risk).fillna(1)
     logger.info("Feature: contract_risk_score created")
 
-    # 8. Binary churn target for ML
+    # 7. Binary churn target for ML
     # Converts Yes/No churn labels into 1/0 for model training
     df["churn_binary"] = (df["churn"] == "Yes").astype(int)
     logger.info("Feature: churn_binary created")
@@ -101,8 +91,8 @@ def get_feature_columns() -> list:
         # Original numeric
         "tenure", "monthlycharges", "totalcharges", "seniorcitizen",
         # Engineered numeric
-        "num_services", "has_support_services", "charge_per_tenure", "monthly_spend_delta",
-        "is_high_value", "is_new_customer", "contract_risk_score",
+        "num_services", "has_support_services", "charge_per_tenure", 
+        "monthly_spend_delta", "is_new_customer", "contract_risk_score",
         # Categoricals (will be encoded in Phase 4)
         "gender", "partner", "dependents", "phoneservice", "multiplelines", 
         "internetservice", "onlinesecurity", "onlinebackup", "deviceprotection", 
