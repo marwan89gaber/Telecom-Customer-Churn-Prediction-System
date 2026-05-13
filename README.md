@@ -65,6 +65,12 @@ python -m src.models.shap_analysis
 
 # 7. Run all tests
 pytest
+
+# 8. Run the batch prediction pipeline (requires Docker PostgreSQL running)
+python -m src.pipeline.batch_predict
+
+# 9. Verify predictions in the database
+docker exec -it churn_postgres psql -U churn_admin -d churn_db -c "SELECT risk_tier, COUNT(*) FROM churn_predictions GROUP BY risk_tier;"
 ```
 
 ---
@@ -77,7 +83,7 @@ pytest
 | 2 | Data engineering pipeline | ✅ Done |
 | 3 | EDA & feature engineering | ✅ Done |
 | 4 | ML modelling & evaluation | ✅ Done |
-| 5 | Batch prediction pipeline | ⏳ Planned |
+| 5 | Batch prediction pipeline | ✅ Done |
 | 6 | Real-time streaming (Kafka) | ⏳ Planned |
 | 7 | API, dashboard & deployment | ⏳ Planned |
 | 8 | Documentation & packaging | ⏳ Planned |
@@ -103,6 +109,9 @@ telecom-churn-platform/
 ├── models/               # trained model artifacts (Phase 4)
 ├── notebooks/
 │   └── 01_eda.ipynb      # exploratory data analysis and feature engineering
+├── airflow/
+│   └── dags/
+│       └── churn_batch_dag.py  # Airflow DAG for scheduled scoring + retraining
 ├── src/
 │   ├── features/
 │   │   ├── engineer.py   # 8 business-driven engineered features
@@ -115,6 +124,8 @@ telecom-churn-platform/
 │   │   ├── load.py       # PostgreSQL loader
 │   │   └── spark_batch.py  # PySpark ETL job
 │   ├── streaming/        # Kafka producers and consumers (Phase 6)
+│   │   ├── batch_predict.py  # batch scoring from DB → predictions table
+│   │   └── drift_detector.py # PSI-based feature drift detection
 │   └── utils/
 │       ├── config.py     # environment and path configuration
 │       └── logger.py     # structured logging with loguru
@@ -175,6 +186,19 @@ https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
 ```
 
 Ensure `JAVA_HOME` points to a Java 11+ installation before running the Spark job.
+
+---
+
+## Scheduling
+
+The batch pipeline can be scheduled two ways:
+
+**Cron (simple)** — add to your crontab with `crontab -e`:
+0 2 * * * cd /path/to/project && .venv/bin/python -m src.pipeline.batch_predict
+
+**Airflow (production)** — the DAG at `airflow/dags/churn_batch_dag.py` runs
+drift detection before every scoring run and retrains automatically if PSI ≥ 0.20.
+See the file header for local Airflow setup instructions.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "model_name": "Logistic Regression",
-  "trained_at": "2026-05-12T06:14:48.792446",
+  "trained_at": "2026-05-13T09:24:31.126399",
   "test_metrics": {
     "roc_auc": 0.8469,
     "avg_precision": 0.6626,
