@@ -51,8 +51,8 @@ All scripts must be run as modules from the project root with the venv active.
 python -m src.pipeline.etl
 
 # 2. Verify data landed in the database
-docker exec -it churn_postgres psql -U churn_admin -d churn_db \
-  -c "SELECT churn, COUNT(*) FROM customers GROUP BY churn;"
+docker exec -it churn_postgres psql -U airflow -d airflow -c \
+  "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('customers', 'churn_predictions');"
 
 # 3. Run the PySpark batch job (requires Java 11+ and JAVA_HOME set)
 python -m src.pipeline.spark_batch
@@ -73,7 +73,8 @@ pytest
 python -m src.pipeline.batch_predict
 
 # 9. Verify predictions in the database
-docker exec -it churn_postgres psql -U churn_admin -d churn_db -c "SELECT risk_tier, COUNT(*) FROM churn_predictions GROUP BY risk_tier;"
+docker exec -it churn_postgres psql -U churn_admin -d churn_db -c \
+  "SELECT risk_tier, COUNT(*) FROM churn_predictions GROUP BY risk_tier;"
 ```
 
 ---

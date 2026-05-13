@@ -1,10 +1,4 @@
 -- docker/init.sql
-CREATE ROLE churn_admin WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE;
-ALTER DEFAULT PRIVILEGES GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO churn_admin;
-
-CREATE DATABASE churn_db OWNER airflow;
-
-\connect churn_db;
 
 CREATE TABLE IF NOT EXISTS customers (
     customer_id       VARCHAR(50) PRIMARY KEY,
@@ -37,8 +31,3 @@ CREATE TABLE IF NOT EXISTS churn_predictions (
     risk_tier       VARCHAR(10),
     predicted_at    TIMESTAMP DEFAULT NOW()
 );
-
-GRANT CONNECT ON DATABASE churn_db TO churn_admin;
-GRANT USAGE ON SCHEMA public TO churn_admin;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO churn_admin;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO churn_admin;
