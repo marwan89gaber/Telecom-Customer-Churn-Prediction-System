@@ -79,7 +79,7 @@ docker exec -it churn_postgres psql -U churn_admin -d churn_db -c \
 
 ---
 
-## Project phases
+## Project phases 
 
 | Phase | Focus | Status |
 |-------|-------|--------|
