@@ -26,12 +26,16 @@ def compute_psi(expected: np.ndarray, actual: np.ndarray, bins: int = 10) -> flo
     across runs regardless of what the current data looks like.
     """
     breakpoints = np.percentile(expected, np.linspace(0, 100, bins + 1))
-    breakpoints = np.unique(breakpoints)  # sparse features can produce duplicate edges
+    breakpoints = np.unique(breakpoints)
+
+    # If fewer than 2 unique breakpoints, the feature is constant or binary.
+    # PSI is undefined — return 0 (stable) to avoid false retraining triggers.
+    if len(breakpoints) < 3:
+        return 0.0
 
     expected_counts = np.histogram(expected, bins=breakpoints)[0]
     actual_counts   = np.histogram(actual,   bins=breakpoints)[0]
 
-    # Replace zeros to avoid log(0); 0.0001 is the conventional floor
     expected_pct = np.where(expected_counts == 0, 0.0001, expected_counts / len(expected))
     actual_pct   = np.where(actual_counts   == 0, 0.0001, actual_counts   / len(actual))
 

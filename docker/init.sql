@@ -1,3 +1,8 @@
+-- docker/init.sql
+CREATE DATABASE churn_db;
+
+\connect churn_db;
+
 CREATE TABLE IF NOT EXISTS customers (
     customer_id       VARCHAR(50) PRIMARY KEY,
     gender            VARCHAR(10),

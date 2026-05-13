@@ -5,9 +5,8 @@ services:
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
       POSTGRES_DB: airflow
+      CHURN_DB_NAME: churn_db
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +19,9 @@ services:
       retries: 5
 
   airflow-init:
-    image: apache/airflow:2.10.0
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.airflow
     container_name: airflow-init
     depends_on:
       postgres:
@@ -32,11 +33,22 @@ services:
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
       AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      PYTHONPATH: /opt/airflow
-    command: db init
+      PYTHONPATH: /opt/airflow:/opt/project
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+      AIRFLOW__CORE__AUTH_MANAGER: "airflow.auth.managers.fab.fab_auth_manager.FabAuthManager"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./:/opt/project
+    command: version   
 
   airflow-webserver:
-    image: apache/airflow:2.10.0
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.airflow
     container_name: airflow-webserver
     restart: always
     depends_on:
@@ -49,7 +61,8 @@ services:
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
       AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      PYTHONPATH: /opt/airflow
+      PYTHONPATH: /opt/airflow:/opt/project
+      AIRFLOW__CORE__AUTH_MANAGER: "airflow.auth.managers.fab.fab_auth_manager.FabAuthManager"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -59,7 +72,9 @@ services:
     command: webserver
 
   airflow-scheduler:
-    image: apache/airflow:2.10.0
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.airflow
     container_name: airflow-scheduler
     restart: always
     depends_on:
@@ -72,7 +87,8 @@ services:
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
       AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      PYTHONPATH: /opt/airflow
+      PYTHONPATH: /opt/airflow:/opt/project
+      AIRFLOW__CORE__AUTH_MANAGER: "airflow.auth.managers.fab.fab_auth_manager.FabAuthManager"
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
