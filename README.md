@@ -30,8 +30,11 @@ python -m venv .venv
 source .venv/bin/activate     # Mac/Linux
 pip install -r requirements.txt
 
-# Start PostgreSQL
+# Start PostgreSQL (init.sql runs automatically on first launch)
 docker-compose up -d
+
+# If re-running on an existing volume and tables are missing, reset with:
+docker-compose down -v && docker-compose up -d
 
 # Download dataset from Kaggle and place at:
 # data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv
@@ -122,16 +125,18 @@ telecom-churn-platform/
 │   │   ├── extract.py    # CSV ingestion
 │   │   ├── transform.py  # cleaning and standardisation
 │   │   ├── load.py       # PostgreSQL loader
-│   │   └── spark_batch.py  # PySpark ETL job
-│   ├── streaming/        # Kafka producers and consumers (Phase 6)
+│   │   ├── spark_batch.py  # PySpark ETL job
 │   │   ├── batch_predict.py  # batch scoring from DB → predictions table
 │   │   └── drift_detector.py # PSI-based feature drift detection
+│   ├── streaming/        # Kafka producers and consumers (Phase 6)
 │   └── utils/
 │       ├── config.py     # environment and path configuration
 │       └── logger.py     # structured logging with loguru
 ├── tests/
 │   ├── test_pipeline.py  # ETL transform unit tests
 │   └── test_features.py  # feature engineering unit tests
+│   ├── test_model.py         # model inference and risk tier tests
+│   └── test_batch_predict.py # PSI drift detection unit tests
 ├── docker-compose.yml
 ├── pytest.ini
 ├── requirements.txt
@@ -194,7 +199,9 @@ Ensure `JAVA_HOME` points to a Java 11+ installation before running the Spark jo
 The batch pipeline can be scheduled two ways:
 
 **Cron (simple)** — add to your crontab with `crontab -e`:
+```
 0 2 * * * cd /path/to/project && .venv/bin/python -m src.pipeline.batch_predict
+```
 
 **Airflow (production)** — the DAG at `airflow/dags/churn_batch_dag.py` runs
 drift detection before every scoring run and retrains automatically if PSI ≥ 0.20.

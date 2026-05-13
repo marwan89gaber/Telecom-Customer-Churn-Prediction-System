@@ -21,6 +21,7 @@ data/processed/
 # Models — too large for Git
 models/*.pkl
 models/*.joblib
+models/*.json
 
 # Docker
 docker/volumes/

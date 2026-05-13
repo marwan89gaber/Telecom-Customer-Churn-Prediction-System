@@ -1,0 +1,13 @@
+# Airflow container dependencies — only what DAG tasks actually import.
+# Heavy packages (pyspark, shap, matplotlib, jupyter) run locally, not in Airflow.
+
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.2
+xgboost==2.0.3
+lightgbm==4.3.0
+joblib==1.4.2
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.30
+python-dotenv==1.0.1
+loguru==0.7.2
