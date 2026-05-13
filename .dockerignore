@@ -33,4 +33,3 @@ dmypy.json
 kafka
 zookeeper
 dashboard
-requirements-airflow.txt

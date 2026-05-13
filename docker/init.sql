@@ -31,3 +31,12 @@ CREATE TABLE IF NOT EXISTS churn_predictions (
     risk_tier       VARCHAR(10),
     predicted_at    TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS churn_alerts (
+    alert_id        SERIAL PRIMARY KEY,
+    customer_id     VARCHAR(50),
+    event_type      VARCHAR(30),
+    churn_prob      NUMERIC(5,4),
+    risk_tier       VARCHAR(10),
+    alerted_at      TIMESTAMP DEFAULT NOW()
+);
