@@ -9,6 +9,7 @@ Run:
 """
 import json
 from datetime import datetime, timezone
+import os
 
 from kafka import KafkaConsumer
 from sqlalchemy import create_engine, text
@@ -33,7 +34,7 @@ def build_consumer() -> KafkaConsumer:
         group_id="churn-alert-persister",
         auto_offset_reset="earliest",   # on first start, process all existing alerts
         enable_auto_commit=True,
-        consumer_timeout_ms=30_000,     # stop after 30s of silence (useful for tests)
+        consumer_timeout_ms=int(os.getenv("ALERT_CONSUMER_TIMEOUT_MS", -1)),     # stop after timeout if set, else run forever
     )
 
 
@@ -49,36 +50,24 @@ def run_alert_consumer(limit: int = 0) -> int:
     written = 0
 
     try:
-        for message in consumer:
-            alert = message.value
-            record = {
-                "customer_id": alert.get("customer_id", "unknown"),
-                "event_type":  alert.get("event_type",  "unknown"),
-                "churn_prob":  float(alert.get("churn_prob", 0.0)),
-                "risk_tier":   alert.get("risk_tier",   "High"),
-                "alerted_at":  datetime.now(timezone.utc),
-            }
-            with engine.connect() as conn:
+        with engine.connect() as conn:          # ← one connection, opened once
+            for message in consumer:
+                alert = message.value
+                record = {
+                    "customer_id": alert.get("customer_id", "unknown"),
+                    "event_type":  alert.get("event_type",  "unknown"),
+                    "churn_prob":  min(max(float(alert.get("churn_prob", 0.0)), 0.0), 1.0),
+                    "risk_tier":   alert.get("risk_tier",   "High"),
+                    "alerted_at":  datetime.now(timezone.utc),
+                }
                 conn.execute(INSERT_SQL, record)
                 conn.commit()
-
-            written += 1
-            logger.info(
-                f"Alert written [{written}] | customer={record['customer_id']} "
-                f"prob={record['churn_prob']:.3f} event={record['event_type']}"
-            )
-
-            if limit and written >= limit:
-                logger.info(f"Reached limit of {limit} — stopping")
-                break
-
-    except Exception as e:
-        logger.error(f"Alert consumer error: {e}")
-        raise
+                written += 1
+                logger.info(f"Alert written [{written}] ...")
+                if limit and written >= limit:
+                    break
     finally:
         consumer.close()
-        logger.info(f"Alert consumer closed — {written} alerts written")
-
     return written
 
 

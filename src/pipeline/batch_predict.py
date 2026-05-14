@@ -48,9 +48,8 @@ def write_predictions(predictions: pd.DataFrame, engine) -> None:
     output = predictions[["customer_id", "churn_prob", "risk_tier"]].copy()
     output["predicted_at"] = datetime.now(timezone.utc)
 
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         conn.execute(text("DELETE FROM churn_predictions"))
-        conn.commit()
 
     output.to_sql(
         "churn_predictions",
@@ -76,32 +75,30 @@ def run_batch_predict() -> None:
     logger.info("Phase 5 — Batch prediction started")
 
     engine = create_engine(Config.get_db_url())
-
-    # 1. Read from DB
-    raw_df = read_customers(engine)
-
-    # 2. Rename columns so engineer_features() recognises them
+    raw_df     = read_customers(engine)
     feature_df = rename_for_inference(raw_df)
 
-    # 3. Drift check on numeric features before scoring
-    logger.info("Running drift check...")
+    # Engineer once — reuse for both drift check and scoring
+    from src.features.engineer import engineer_features
+    from src.models.predict import load_model, get_risk_tier
+    from src.features.feature_store import ALL_FEATURES
+
     engineered = engineer_features(feature_df)
+
+    logger.info("Running drift check...")
     drift_result = check_drift(engineered[NUMERIC_FEATURES])
-
     if drift_result["retraining_needed"]:
-        logger.warning(
-            "Significant feature drift detected (PSI ≥ 0.20). "
-            "Predictions will still run — but schedule a model retrain soon."
-        )
+        logger.warning("Significant feature drift detected (PSI ≥ 0.20).")
 
-    # 4. Score all customers
-    scored_df = predict_batch(feature_df)
+    # Score using already-engineered DataFrame — no second engineer_features call
+    model = load_model()
+    probs = model.predict_proba(engineered[ALL_FEATURES])[:, 1]
+    scored_df = engineered.copy()
+    scored_df["churn_prob"] = probs.round(4)
+    scored_df["risk_tier"]  = [get_risk_tier(p) for p in probs]
 
-    # 5. Log breakdown
     logger.info("Risk tier breakdown:")
     log_risk_summary(scored_df)
-
-    # 6. Write predictions back to DB
     write_predictions(scored_df, engine)
 
     elapsed = round(time.time() - start, 2)

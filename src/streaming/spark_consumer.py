@@ -9,6 +9,7 @@ Run (from project root, venv active, JAVA_HOME set):
     python -m src.streaming.spark_consumer
 """
 import json
+from kafka import KafkaProducer
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
@@ -20,6 +21,8 @@ from src.streaming.topics import TOPIC_EVENTS, TOPIC_ALERTS
 from src.utils.config import Config
 from src.utils.logger import get_logger
 
+_model = None
+_alert_producer = None
 logger = get_logger("spark_consumer")
 
 # Kafka bootstrap inside Docker network (Spark runs inside Docker)
@@ -75,6 +78,24 @@ DB_TO_FEATURE = {
     "total_charges":     "totalcharges",
 }
 
+def get_model():
+    global _model
+    if _model is None:
+        from src.models.predict import load_model
+        _model = load_model()
+        logger.info("Model loaded and cached")
+    return _model
+
+def get_alert_producer() -> "KafkaProducer":
+    global _alert_producer
+    if _alert_producer is None:
+        from kafka import KafkaProducer
+        _alert_producer = KafkaProducer(
+            bootstrap_servers=Config.KAFKA_BOOTSTRAP_SERVERS,
+            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            key_serializer=lambda k: k.encode("utf-8"),
+        )
+    return _alert_producer
 
 def get_spark() -> SparkSession:
     return (
@@ -105,7 +126,16 @@ def score_batch(batch_df, batch_id: int) -> None:
     pandas_df = pandas_df.rename(columns=DB_TO_FEATURE)
 
     # Score
-    scored = predict_batch(pandas_df)
+    from src.features.engineer import engineer_features
+    from src.features.feature_store import ALL_FEATURES
+    from src.models.predict import get_risk_tier
+
+    engineered = engineer_features(pandas_df)
+    model = get_model()
+    probs = model.predict_proba(engineered[ALL_FEATURES])[:, 1]
+    scored = engineered.copy()
+    scored["churn_prob"] = probs.round(4)
+    scored["risk_tier"] = [get_risk_tier(p) for p in probs]
 
     # Filter to high-risk only
     high_risk = scored[scored["risk_tier"] == "High"]
@@ -119,13 +149,7 @@ def score_batch(batch_df, batch_id: int) -> None:
         f"{len(high_risk)} HIGH-RISK alerts"
     )
 
-    # Publish alerts to churn-alerts topic
-    alert_producer = KafkaProducer(
-        bootstrap_servers=Config.KAFKA_BOOTSTRAP_SERVERS,
-        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-        key_serializer=lambda k: k.encode("utf-8"),
-    )
-
+    alert_producer = get_alert_producer()
     for _, row in high_risk.iterrows():
         alert = {
             "customer_id": str(row.get("customer_id", "unknown")),
@@ -140,7 +164,6 @@ def score_batch(batch_df, batch_id: int) -> None:
         )
 
     alert_producer.flush()
-    alert_producer.close()
 
 
 def run_consumer() -> None:

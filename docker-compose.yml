@@ -26,6 +26,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      POSTGRES_HOST: postgres
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__FERNET_KEY: ""
@@ -41,7 +42,9 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
+      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
+      - ./:/opt/airflow
     command: version   
 
   airflow-webserver:
@@ -54,6 +57,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
     environment:
+      POSTGRES_HOST: postgres
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__FERNET_KEY: ""
@@ -62,10 +66,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       PYTHONPATH: /opt/airflow:/opt/project
       AIRFLOW__CORE__AUTH_MANAGER: "airflow.auth.managers.fab.fab_auth_manager.FabAuthManager"
+    working_dir: /opt/project
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
+      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
+      - ./:/opt/airflow
     ports:
       - "8080:8080"
     command: webserver
@@ -80,6 +87,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
     environment:
+      POSTGRES_HOST: postgres
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__CORE__FERNET_KEY: ""
@@ -88,10 +96,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       PYTHONPATH: /opt/airflow:/opt/project
       AIRFLOW__CORE__AUTH_MANAGER: "airflow.auth.managers.fab.fab_auth_manager.FabAuthManager"
+    working_dir: /opt/project
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
+      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
+      - ./:/opt/airflow
     command: scheduler
 
   zookeeper:
@@ -154,7 +165,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      kafka_init:
+      kafka-init:
         condition: service_completed_successfully
     environment:
       POSTGRES_USER: airflow
