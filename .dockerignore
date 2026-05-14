@@ -33,3 +33,6 @@ dmypy.json
 kafka
 zookeeper
 dashboard
+data
+*.parquet
+*.csv

@@ -127,5 +127,47 @@ services:
       timeout: 10s
       retries: 10
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: churn_kafka_init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic customer-events --partitions 3 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic churn-alerts --partitions 1 --replication-factor 1
+      echo 'Topics created.'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+    restart: "no"
+    
+  spark-consumer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.spark
+    container_name: churn_spark_consumer
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC_EVENTS: customer-events
+      KAFKA_TOPIC_ALERTS: churn-alerts
+      PYTHONPATH: /opt/project
+    volumes:
+      - ./src:/opt/project/src
+      - ./models:/opt/project/models
+    command: python -m src.streaming.spark_consumer
+
 volumes:
   postgres_data:

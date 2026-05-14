@@ -1,0 +1,27 @@
+FROM python:3.10-slim
+
+# Java is required by PySpark
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-21-jre-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+# Only what spark_consumer.py and its imports actually need
+RUN pip install --no-cache-dir \
+    pyspark==3.5.1 \
+    kafka-python==2.0.2 \
+    pandas==2.2.2 \
+    numpy==1.26.4 \
+    scikit-learn==1.4.2 \
+    xgboost==2.0.3 \
+    lightgbm==4.3.0 \
+    joblib==1.4.2 \
+    python-dotenv==1.0.1 \
+    loguru==0.7.2 \
+    psycopg2-binary==2.9.9 \
+    sqlalchemy==2.0.30 \
+    imbalanced-learn==0.12.2 \
+    shap==0.45.0
+
+WORKDIR /opt/project

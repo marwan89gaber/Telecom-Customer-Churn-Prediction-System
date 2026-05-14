@@ -9,6 +9,9 @@ class Config:
     POSTGRES_HOST     = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_PORT     = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB       = os.getenv("POSTGRES_DB", "airflow")
+    KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
+    KAFKA_TOPIC_EVENTS      = os.getenv("KAFKA_TOPIC_EVENTS", "customer-events")
+    KAFKA_TOPIC_ALERTS      = os.getenv("KAFKA_TOPIC_ALERTS", "churn-alerts")
 
     RAW_DATA_PATH = "data/external/WA_Fn-UseC_-Telco-Customer-Churn.csv"
     PROCESSED_DATA_PATH = "data/processed/customers_clean.csv"
