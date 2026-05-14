@@ -24,8 +24,6 @@ from src.utils.logger import get_logger
 logger = get_logger("producer")
 
 SEND_INTERVAL_SECONDS = 0.5   # one event every 500ms — adjust for demos
-HIGH_RISK_BOOST       = 3     # high-risk customers appear 3x more often
-
 
 def build_producer() -> KafkaProducer:
     return KafkaProducer(

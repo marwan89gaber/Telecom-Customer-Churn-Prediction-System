@@ -154,6 +154,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      kafka_init:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow

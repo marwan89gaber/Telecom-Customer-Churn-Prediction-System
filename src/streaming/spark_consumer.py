@@ -9,11 +9,11 @@ Run (from project root, venv active, JAVA_HOME set):
     python -m src.streaming.spark_consumer
 """
 import json
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
     StructType, StructField,
-    StringType, IntegerType, DoubleType, TimestampType,
+    StringType, IntegerType, DoubleType,
 )
 
 from src.streaming.topics import TOPIC_EVENTS, TOPIC_ALERTS
@@ -23,7 +23,6 @@ from src.utils.logger import get_logger
 logger = get_logger("spark_consumer")
 
 # Kafka bootstrap inside Docker network (Spark runs inside Docker)
-from src.utils.config import Config
 KAFKA_INTERNAL = Config.KAFKA_BOOTSTRAP_SERVERS
 
 KAFKA_PACKAGES = (
@@ -98,7 +97,6 @@ def score_batch(batch_df, batch_id: int) -> None:
 
     import pandas as pd
     from src.models.predict import predict_batch
-    from src.pipeline.load import COLUMN_MAP
     from kafka import KafkaProducer
 
     pandas_df = batch_df.toPandas()

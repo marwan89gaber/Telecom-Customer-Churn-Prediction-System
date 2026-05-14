@@ -166,7 +166,7 @@ def run_training() -> None:
     metrics = evaluate_model(best_pipeline, X_test, y_test)
     save_evaluation_plots(best_pipeline, X_test, y_test)
 
-    save_training_distribution(X, NUMERIC_FEATURES)
+    save_training_distribution(X_train, NUMERIC_FEATURES)
     model_path = MODELS_DIR / "churn_model.pkl"
     joblib.dump(best_pipeline, model_path)
     logger.info(f"Model saved → {model_path}")
