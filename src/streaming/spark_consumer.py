@@ -89,7 +89,6 @@ def get_model():
 def get_alert_producer() -> "KafkaProducer":
     global _alert_producer
     if _alert_producer is None:
-        from kafka import KafkaProducer
         _alert_producer = KafkaProducer(
             bootstrap_servers=Config.KAFKA_BOOTSTRAP_SERVERS,
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
@@ -117,8 +116,6 @@ def score_batch(batch_df, batch_id: int) -> None:
         return
 
     import pandas as pd
-    from src.models.predict import predict_batch
-    from kafka import KafkaProducer
 
     pandas_df = batch_df.toPandas()
 

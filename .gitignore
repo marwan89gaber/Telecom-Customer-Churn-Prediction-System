@@ -13,8 +13,10 @@ venv/
 *.ipynb_checkpoints
 
 # Data — never commit raw data to Git
-data/raw/
-data/processed/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 *.csv
 *.parquet
 
@@ -59,3 +61,7 @@ airflow.db
 
 # Checkpoint files
 CHECKPOINT.md
+
+# Airflow generated files in project root
+webserver_config.py
+*.pid

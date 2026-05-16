@@ -42,7 +42,6 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
-      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
       - ./:/opt/airflow
     command: version   
@@ -70,7 +69,6 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
-      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
       - ./:/opt/airflow
     ports:
@@ -100,7 +98,6 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
-      - ./artifacts:/opt/airflow/artifacts
       - ./:/opt/project
       - ./:/opt/airflow
     command: scheduler

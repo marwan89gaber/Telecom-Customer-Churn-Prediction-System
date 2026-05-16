@@ -2,9 +2,12 @@ import os
 from loguru import logger
 import sys
 
+_configured = False
+
 def get_logger(name: str = "churn_etl"):
+    global _configured
     os.makedirs("logs", exist_ok=True)
-    if not logger._core.handlers:
+    if not _configured:
         logger.remove()
         logger.add(
             sys.stdout,
@@ -18,4 +21,5 @@ def get_logger(name: str = "churn_etl"):
             retention="7 days",
             level="DEBUG",
         )
+        _configured = True
     return logger

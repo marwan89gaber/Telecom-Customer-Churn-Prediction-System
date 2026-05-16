@@ -9,11 +9,10 @@ from datetime import datetime, timezone
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-from src.models.predict import predict_batch
 from src.pipeline.drift_detector import check_drift
 from src.pipeline.load import COLUMN_MAP
 from src.features.engineer import engineer_features
-from src.features.feature_store import NUMERIC_FEATURES
+from src.features.feature_store import NUMERIC_FEATURES, ALL_FEATURES
 from src.utils.config import Config
 from src.utils.logger import get_logger
 
@@ -79,9 +78,7 @@ def run_batch_predict() -> None:
     feature_df = rename_for_inference(raw_df)
 
     # Engineer once — reuse for both drift check and scoring
-    from src.features.engineer import engineer_features
     from src.models.predict import load_model, get_risk_tier
-    from src.features.feature_store import ALL_FEATURES
 
     engineered = engineer_features(feature_df)
 

@@ -52,7 +52,10 @@ with DAG(
         engineered = engineer_features(feature_df)
 
         result = check_drift(engineered[NUMERIC_FEATURES])
-        context["ti"].xcom_push(key="drift_result", value=result)
+        context["ti"].xcom_push(key="drift_result", value={
+            "max_psi": float(result["max_psi"]),
+            "retraining_needed": bool(result["retraining_needed"]),
+        })
 
         return "retrain_model" if result["retraining_needed"] else "skip_retrain"
 
